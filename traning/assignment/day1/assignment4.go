@@ -1,21 +1,45 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"sync"
+)
 
-/*
-Generate the Series 1A2B3C4D5E....... using  goroutine and channel  .Routine 1 shall generate A,B C D and routine 2 shall
-generate 1 ,2,3,4,5,6....... Both this output join together in the output
-*/
+func main() {
+	letter, number := make(chan bool), make(chan bool)
 
+	wg := sync.WaitGroup{}
+	go func() {
 
+		for ch := 'A'; ch < 'F'; ch += 1 {
+			letter <- true
+			fmt.Print(string(ch))
+			<-number
 
-func main () {
+		}
+		close(letter)
+	}()
 
-	number := []int{1, 2, 3, 4, 5}
-	alphabets := []string{ "A","B", "C","D", "E" }
+	wg.Add(1)
+	go func() {
+		start := 1
+		for {
+			number <- true
 
+			fmt.Print(start)
+			start += 1
 
-	myChannel := make(chan string)
+			_, ok := <-letter
+			if ok == false {
+				break
+			}
+		}
+		wg.Done()
+	}()
 
+	<-number
+
+	wg.Wait()
+	fmt.Print("\n")
 
 }
